@@ -1,8 +1,7 @@
-use std::collections::HashMap;
+mod play;
 
-fn example_module() -> () {
-    println!("Hello, world!");
-}
+use play::implement::implement_main;
+use std::collections::HashMap;
 
 fn main() -> () {
     let key_arg = match std::env::args().nth(1) {
@@ -11,7 +10,7 @@ fn main() -> () {
     };
 
     let mut modules: HashMap<String, fn()> = HashMap::new();
-    modules.insert("example".to_string(), example_module);
+    modules.insert("implement".to_string(), implement_main);
 
     match modules.get(&key_arg) {
         Some(f) => f(),
