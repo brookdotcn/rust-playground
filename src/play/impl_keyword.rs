@@ -25,6 +25,7 @@ trait CarMod {
 
 impl CarMod for u8 {
     fn remap(&mut self) -> u8 {
+        println!("u8::remap() was called");
         *self * 2
     }
 }
@@ -34,12 +35,12 @@ fn upgrade() -> impl Fn(u8) -> () {
     |n: u8| println!("closure was called -> {}", n * 2)
 }
 
-pub fn implement_main() -> () {
+pub fn impl_keyword_main() -> () {
     let instance = Car::new(10);
     Car::drive();
 
     let mut power = Car::get_power(&instance);
-    println!("u8::remap() was called -> {}", power.remap());
+    power.remap();
 
     let inner = upgrade();
     inner(5);

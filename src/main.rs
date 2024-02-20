@@ -1,6 +1,5 @@
 mod play;
 
-use play::implement::implement_main;
 use std::collections::HashMap;
 
 fn main() -> () {
@@ -10,7 +9,8 @@ fn main() -> () {
     };
 
     let mut modules: HashMap<String, fn()> = HashMap::new();
-    modules.insert("implement".to_string(), implement_main);
+    modules.insert("impl".to_string(), play::impl_keyword::impl_keyword_main);
+    modules.insert("trait".to_string(), play::trait_keyword::trait_keyword_main);
 
     match modules.get(&key_arg) {
         Some(f) => f(),
