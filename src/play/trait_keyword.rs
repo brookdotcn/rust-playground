@@ -1,6 +1,8 @@
 /* https://doc.rust-lang.org/std/keyword.trait.html */
 
+/* structure of extended implementation on data types */
 trait Cool {
+    /* only constants, types or functions for traits */
     const COOL: Self;
     fn is_cool(&self) -> bool;
 }
@@ -13,10 +15,12 @@ impl Cool for i32 {
     }
 }
 
+/* traits can be extended into other traits */
 trait Reset: Default {
     fn reset(&mut self) -> ();
 }
 
+/* traits can be implemented with generics */
 impl<T: Default> Reset for T {
     fn reset(&mut self) -> () {
         println!("T::reset() was called");

@@ -4,6 +4,7 @@ struct Car {
     power: u8,
 }
 
+/* add functions to struct */
 impl Car {
     fn new(power: u8) -> Self {
         Self { power }
@@ -19,10 +20,12 @@ impl Car {
     }
 }
 
+/* see trait_keyword.rs */
 trait CarMod {
     fn remap(&mut self) -> u8;
 }
 
+/* adding functionality to a data type */
 impl CarMod for u8 {
     fn remap(&mut self) -> u8 {
         println!("u8::remap() was called");
@@ -30,6 +33,7 @@ impl CarMod for u8 {
     }
 }
 
+/* closure as a return type */
 fn upgrade() -> impl Fn(u8) -> () {
     println!("upgrade() was called");
     |n: u8| println!("closure was called -> {}", n * 2)
