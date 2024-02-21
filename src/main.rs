@@ -11,6 +11,7 @@ fn main() -> () {
     let mut modules: HashMap<String, fn()> = HashMap::new();
     modules.insert("impl".to_string(), play::impl_keyword::impl_keyword_main);
     modules.insert("trait".to_string(), play::trait_keyword::trait_keyword_main);
+    modules.insert("arc".to_string(), play::arc_struct::arc_struct_main);
 
     match modules.get(&key_arg) {
         Some(f) => f(),
