@@ -2,14 +2,39 @@ use colored::Colorize;
 use rand::Rng;
 use std::io::{stdin, stdout, Write};
 
-fn clear_console() -> () {
+fn choose_word<'l>(words: &'l [&str; 5]) -> &'l str {
+    let index = rand::thread_rng().gen_range(0..words.len());
+    words[index]
+}
+
+fn clear() -> () {
     print!("\x1B[2J\x1B[1;1H");
 }
 
-/// iterate over each `char` and print it if guessed, otherwise an underscore.
-/// ### args
-/// * **word** `&str` the chosen word
-/// * **correct_chars** `&Vec<char>` all correct guesses
+fn game_is_over(word: &str, correct: &Vec<char>, incorrect: &Vec<char>) -> bool {
+    if correct.len() == word.len() {
+        println!("[SUCCESS] the word was {}", word.green());
+        return true;
+    } else if incorrect.len() >= 5 {
+        println!("[FAILURE] the word was {}", word.red());
+        return true;
+    }
+
+    false
+}
+
+fn show_metadata(incorrect: &Vec<char>) -> () {
+    let previous_incorrect = incorrect
+        .iter()
+        .map(|char| char.to_string())
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    print!("[LIVES] {}", 5 - incorrect.len());
+    print!(" - ");
+    print!("[INCORRECT] {previous_incorrect}\n\n");
+}
+
 fn display_word(word: &str, correct_chars: &Vec<char>) -> () {
     for i in 0..word.len() {
         let char = word.chars().nth(i).unwrap();
@@ -20,76 +45,48 @@ fn display_word(word: &str, correct_chars: &Vec<char>) -> () {
 
         print!(" _ ");
     }
+
+    print!(" | [GUESS] ");
 }
 
-/// count the matches of a guess within a word.
-/// ### args
-/// * **word** `&str` the chosen word
-/// * **guess** `char` match to find in **word**
-fn find_occurences(word: &str, guess: char) -> usize {
-    word.matches(guess).collect::<Vec<&str>>().len()
-}
-
-/// validate guess is present in a word.
-/// ### args
-/// * **word** `&str` the chosen word
-/// * **guess** `char` match to find in **word**
-fn guess_is_valid(word: &str, guess: char) -> bool {
-    word.find(guess).is_some()
-}
-
-/// randomly select a word from a list.
-/// ### args
-/// * **words** `[&str]` list of words to use in the game
-fn choose_word<'l>(words: &'l [&str; 5]) -> &'l str {
-    let index = rand::thread_rng().gen_range(0..words.len());
-    words[index]
+fn judge_guess(word: &str, guess: char, correct: &mut Vec<char>, incorrect: &mut Vec<char>) -> () {
+    if word.find(guess).is_some() {
+        for _ in 0..word.matches(guess).collect::<Vec<&str>>().len() {
+            correct.push(guess);
+        }
+    } else {
+        if !incorrect.contains(&guess) {
+            incorrect.push(guess);
+        }
+    }
 }
 
 pub fn hangman_run() -> () {
     let words: [&str; 5] = ["rust", "trait", "arc", "impl", "match"];
     let word = choose_word(&words);
 
+    let mut guess = String::new();
     let mut correct_guesses = Vec::<char>::new();
     let mut incorrect_guesses = Vec::<char>::new();
     let mut error = String::new();
 
-    clear_console();
-
     loop {
-        clear_console();
+        clear();
+        guess.clear();
 
-        /* print error after console being cleared */
         if !error.is_empty() {
             println!("[WARNING] {}\n", error.yellow());
         }
 
-        /* handle game result */
-        if correct_guesses.len() == word.len() {
-            println!("[SUCCESS] the word was {}", word.green());
-            break;
-        } else if incorrect_guesses.len() >= 5 {
-            println!("[FAILURE] the word was {}", word.red());
+        if game_is_over(&word, &correct_guesses, &incorrect_guesses) {
             break;
         }
 
-        /* show lives and previous incorrect guesses if an incorrect guess has been made */
-        if incorrect_guesses.len() > 0 {
-            let previous_incorrect = incorrect_guesses
-                .iter()
-                .map(|char| char.to_string())
-                .collect::<Vec<String>>()
-                .join(", ");
-
-            print!("[LIVES] {}", 5 - incorrect_guesses.len());
-            print!(" - ");
-            print!("[INCORRECT] {previous_incorrect}\n\n");
+        if !incorrect_guesses.is_empty() {
+            show_metadata(&incorrect_guesses);
         }
 
         display_word(&word, &correct_guesses);
-
-        let mut guess = String::new();
-        print!(" | [GUESS] ");
 
         stdout().flush().unwrap();
         stdin().read_line(&mut guess).unwrap();
@@ -105,17 +102,13 @@ pub fn hangman_run() -> () {
             continue;
         }
 
-        if guess_is_valid(&word, guess_char) {
-            for _ in 0..find_occurences(&word, guess_char) {
-                correct_guesses.push(guess_char);
-            }
-        } else {
-            if !incorrect_guesses.contains(&guess_char) {
-                incorrect_guesses.push(guess_char);
-            }
-        }
+        judge_guess(
+            word,
+            guess_char,
+            &mut correct_guesses,
+            &mut incorrect_guesses,
+        );
 
-        /* reset error after a successful run, incorrect or correct */
         error.clear();
     }
 }
