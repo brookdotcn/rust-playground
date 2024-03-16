@@ -1,3 +1,4 @@
+use colored::Colorize;
 use rand::Rng;
 use std::io::{stdin, stdout, Write};
 
@@ -5,17 +6,8 @@ fn clear_console() -> () {
     print!("\x1B[2J\x1B[1;1H");
 }
 
-fn read_guess() -> String {
-    let mut text = String::new();
-    print!(" | [GUESS] ");
-
-    stdout().flush().unwrap();
-    stdin().read_line(&mut text).unwrap();
-
-    text
-}
-
 /// iterate over each `char` and print it if guessed, otherwise an underscore.
+/// ### args
 /// * **word** `&str` the chosen word
 /// * **correct_chars** `&Vec<char>` all correct guesses
 fn display_word(word: &str, correct_chars: &Vec<char>) -> () {
@@ -31,6 +23,7 @@ fn display_word(word: &str, correct_chars: &Vec<char>) -> () {
 }
 
 /// count the matches of a guess within a word.
+/// ### args
 /// * **word** `&str` the chosen word
 /// * **guess** `char` match to find in **word**
 fn find_occurences(word: &str, guess: char) -> usize {
@@ -38,6 +31,7 @@ fn find_occurences(word: &str, guess: char) -> usize {
 }
 
 /// validate guess is present in a word.
+/// ### args
 /// * **word** `&str` the chosen word
 /// * **guess** `char` match to find in **word**
 fn guess_is_valid(word: &str, guess: char) -> bool {
@@ -45,6 +39,7 @@ fn guess_is_valid(word: &str, guess: char) -> bool {
 }
 
 /// randomly select a word from a list.
+/// ### args
 /// * **words** `[&str]` list of words to use in the game
 fn choose_word<'l>(words: &'l [&str; 5]) -> &'l str {
     let index = rand::thread_rng().gen_range(0..words.len());
@@ -66,15 +61,15 @@ pub fn hangman_run() -> () {
 
         /* print error after console being cleared */
         if !error.is_empty() {
-            println!("\x1b[93m{error}\x1b[0m\n");
+            println!("[WARNING] {}\n", error.yellow());
         }
 
         /* handle game result */
         if correct_guesses.len() == word.len() {
-            println!("[SUCCESS] the word was {word}");
+            println!("[SUCCESS] the word was {}", word.green());
             break;
         } else if incorrect_guesses.len() >= 5 {
-            println!("[FAILURE] the word was {word}");
+            println!("[FAILURE] the word was {}", word.red());
             break;
         }
 
@@ -93,7 +88,12 @@ pub fn hangman_run() -> () {
 
         display_word(&word, &correct_guesses);
 
-        let guess = read_guess();
+        let mut guess = String::new();
+        print!(" | [GUESS] ");
+
+        stdout().flush().unwrap();
+        stdin().read_line(&mut guess).unwrap();
+
         if guess.len() > 2 || guess.len() == 1 {
             error = String::from("guess should be a single character");
             continue;
@@ -105,12 +105,14 @@ pub fn hangman_run() -> () {
             continue;
         }
 
-        if guess_is_valid(word, guess_char) {
-            for _ in 0..find_occurences(word, guess_char) {
+        if guess_is_valid(&word, guess_char) {
+            for _ in 0..find_occurences(&word, guess_char) {
                 correct_guesses.push(guess_char);
             }
         } else {
-            incorrect_guesses.push(guess_char);
+            if !incorrect_guesses.contains(&guess_char) {
+                incorrect_guesses.push(guess_char);
+            }
         }
 
         /* reset error after a successful run, incorrect or correct */
